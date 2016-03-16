@@ -1,10 +1,15 @@
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.RandomAccessFile;
 import java.net.InetSocketAddress;
 import java.nio.Buffer;
 import java.nio.ByteBuffer;
 import java.nio.channels.DatagramChannel;
+import java.nio.channels.FileChannel;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
+
 
 public class UDP_Util {
 
@@ -38,10 +43,22 @@ public class UDP_Util {
 
 	}
 
-	public static ByteBuffer readFileChunk(String source, int length, long offset){
-		ByteBuffer buffer = ByteBuffer.al
-		
-		
-		
+	public static ByteBuffer readFileChunk(String path, int length, long offset) {
+		FileInputStream fileInputStream = null;
+		FileChannel fChannel;
+		ByteBuffer buffer = null;
+		try {
+			fileInputStream = new FileInputStream(path);
+			fChannel = fileInputStream.getChannel();
+			fChannel.position(offset);
+			buffer = ByteBuffer.allocate(length);
+			fChannel.read(buffer);
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		buffer.flip();
+		return buffer;
+
 	}
 }
