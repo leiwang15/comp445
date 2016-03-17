@@ -1,15 +1,13 @@
+import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.RandomAccessFile;
 import java.net.InetSocketAddress;
-import java.nio.Buffer;
 import java.nio.ByteBuffer;
 import java.nio.channels.DatagramChannel;
 import java.nio.channels.FileChannel;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
-
 
 public class UDP_Util {
 
@@ -54,11 +52,27 @@ public class UDP_Util {
 			buffer = ByteBuffer.allocate(length);
 			fChannel.read(buffer);
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
+
 			e.printStackTrace();
 		}
 		buffer.flip();
 		return buffer;
+
+	}
+
+	public static void writeBufferToFile(String path, ByteBuffer buffer) {
+
+		try {
+			File file = new File(path);
+			FileOutputStream fStream = new FileOutputStream(file, true);
+			FileChannel fChannel = fStream.getChannel();
+			fChannel.write(buffer);
+			fStream.close();
+			fChannel.close();
+		} catch (IOException e) {
+
+			e.printStackTrace();
+		}
 
 	}
 }

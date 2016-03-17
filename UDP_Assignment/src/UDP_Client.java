@@ -1,47 +1,47 @@
+import java.io.File;
 import java.io.IOException;
 import java.net.InetSocketAddress;
-
 import java.nio.ByteBuffer;
 import java.nio.channels.DatagramChannel;
-import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
-
-
 
 public class UDP_Client {
 
+	private static String path = "C:/Users/AZNGT/Desktop/test.pdf";
+ private static String pathOut = "C:/Users/AZNGT/Desktop/out2.pdf";
+	private static int packetSize = 1500;
+	private static String SERVER_ADDR = "localhost";
+	private static int SERVER_PORT = 6000;
+
 	public static void main(String[] args) throws IOException {
-		DatagramChannel channel = DatagramChannel.open();
-		channel.socket().bind(new InetSocketAddress(6000));
-		channel.configureBlocking(false);
-		String newData = "Sent String";
 
-		ByteBuffer buf = ByteBuffer.allocate(48);
-		buf.clear();
-		buf.put(newData.getBytes());
-		buf.flip();
-		
-		
-		Selector selector = Selector.open();
-		channel.register(selector, SelectionKey.OP_READ);
-		
-		int bytesSent = channel.send(buf, new InetSocketAddress("localhost", 5000));
-		
-		
+		DatagramChannel channel = UDP_Util.createChannel(5000, false);
 
-			   if(selector.select(20000) > 0){
+		Selector selector = UDP_Util.getSelector(channel);
 
-			       //**CODE NEVER REACHES THIS POINT**
+		InetSocketAddress isa = new InetSocketAddress(SERVER_ADDR, SERVER_PORT);
 
-			       ByteBuffer packet = ByteBuffer.allocate(200);
-			       channel.receive(packet);
-			       
-			       String s = new String(packet.array());
-			       System.out.println(s);
-			       
-			   }
-			   
-			
+		long size = new File(path).length();
+		ByteBuffer buffer = null;
+		ByteBuffer ack = ByteBuffer.allocate(1);
+
+		for (long i = 0; i < size; i += packetSize) {
+			buffer = UDP_Util.readFileChunk(path, packetSize, i);
+			UDP_Util.writeBufferToFile(pathOut, buffer);
+			channel.send(buffer, isa);
+			if (selector.select(10) > 0) {
+				ack.clear();
+				channel.receive(ack);
+				ack.flip();
+				int status = (int) ack.array()[0];
+				
+				System.out.println("Client: Received ack from server: " + status);
+
+			} else {
+				System.out.println("Client: Time out, retrying...");
+				i -= packetSize;
+
+			}
+		}
 	}
-
 }
