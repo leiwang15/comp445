@@ -4,6 +4,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
+import java.nio.channels.Channel;
 import java.nio.channels.DatagramChannel;
 import java.nio.channels.FileChannel;
 import java.nio.channels.SelectionKey;
@@ -75,4 +76,27 @@ public class UDP_Util {
 		}
 
 	}
+	
+	public static ByteBuffer sendPacketWithAck(ByteBuffer buffer, int timeout, DatagramChannel ch, InetSocketAddress isa){
+		ByteBuffer ack = ByteBuffer.allocate(1);
+		Selector s = UDP_Util.getSelector(ch);
+		
+		try {
+			ch.send(buffer, isa);
+			if (s.select(timeout) > 0) {
+				
+				ch.receive(ack);
+				ack.flip();
+				//System.out.println("Received ack: " + status);
+			}
+			ch.send(buffer, isa);
+		} catch (IOException e) {
+			
+			e.printStackTrace();
+		}
+		return ack;
+		
+	}
+	
+	
 }
