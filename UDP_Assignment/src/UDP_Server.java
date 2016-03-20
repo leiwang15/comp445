@@ -16,6 +16,11 @@ public class UDP_Server {
 		DatagramChannel channel = UDP_Util.createChannel(6000, false);
 
 		Selector selector = UDP_Util.getSelector(channel);
+			
+		
+		SelectionKey key = channel.register(selector, SelectionKey.OP_READ);
+		
+		
 		InetSocketAddress isa = new InetSocketAddress(CLIENT_ADDR, CLIENT_PORT);
 
 		ByteBuffer packet = ByteBuffer.allocateDirect(packetSize);
@@ -25,29 +30,32 @@ public class UDP_Server {
 
 		while (true) {
 
-			// If there's a packet available, fetch it:
+			
+			if (key.isReadable()) {
+				
+				if (selector.selectNow() > 0) {
+					ack.clear();
+					ack.put((byte) 1);
+					
+					System.out.println("Server: reveived packet.");
+					packet = ByteBuffer.allocateDirect(packetSize);
+					channel.receive(packet);
+					packet.flip();
+					UDP_Util.writeBufferToFile(pathOut, packet);
+					
+					
+					System.out.println("Server: writing to file");
+					System.out.println("Server: sending ack.");
+					ack.flip();
+					channel.send(ack, isa);
+					
 
-			if (selector.selectNow() > 0) {
-				ack.clear();
-				ack.put((byte) 1);
+				}
 				
-				System.out.println("Server: reveived packet.");
-				packet.clear();
-				packet.position(0);
-				channel.receive(packet);
-				packet.flip();
-				UDP_Util.writeBufferToFile(pathOut, packet);
-				
-				
-				System.out.println("Server: writing to file");
-				System.out.println("Server: sending ack.");
-				ack.flip();
-				channel.send(ack, isa);
-				
-
-			}else{
-				//System.out.println("Server: not receiving");
 			}
+			// If there's a packet available, fetch it:
+			//selector = UDP_Util.getSelector(channel);
+			
 		}
 
 	}
