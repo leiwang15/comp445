@@ -4,11 +4,18 @@ import java.nio.*;
 import java.util.*;
 
 public class UDP_Server {
-	private static final int BUFFER_SIZE = 1024 * 50;
+	private static final int BUFFER_SIZE = 20;
 	private static final int PORT = 6789;
-	static String outputFile = "D:/2.zip";
-
+	static String outputFile = "D:/2.txt";
+	
+	
 	public static void main(String[] args) throws IOException {
+		UDP_Server server = new UDP_Server();
+		server.receiveFileChunks();
+		
+	}
+	
+	private void receiveFileChunks() throws IOException{
 		// Create a server socket
 		DatagramSocket serverSocket = new DatagramSocket( PORT );
 
@@ -16,7 +23,7 @@ public class UDP_Server {
 		byte[] receiveData = new byte[ BUFFER_SIZE ];
 		byte[] dataForSend = new byte[ BUFFER_SIZE ];
 		ArrayList<byte[]> fileChunks = new ArrayList<byte[]>();
-
+		int counter = 0;
 		// Infinite loop to check for connections 
 		while(true){
 
@@ -26,13 +33,21 @@ public class UDP_Server {
 
 			// Get the message from the packet
 			int message = ByteBuffer.wrap(received.getData()).getInt();
-			
+
 			Random random = new Random( );
 			int chance = random.nextInt( 100 );
 
 			// 1 in 2 chance of responding to the message
 			if( ((chance % 1) == 0) ){
-				fileChunks.add(received.getData());
+				
+				byte[] data = received.getData();
+				fileChunks.add(counter, data);
+				counter++;
+				for(byte[] b : fileChunks){
+					String str = new String(b, "UTF-8");
+		    		System.out.println(str);
+				}
+				
 				
 				System.out.println("FROM CLIENT: " + message);
 
@@ -57,7 +72,12 @@ public class UDP_Server {
 		mergeFile(fileChunks);
 	}
 
-	private static void mergeFile(ArrayList<byte[]> list) throws IOException{
+	private void mergeFile(ArrayList<byte[]> list) throws IOException{
+		for(byte[] b : list){
+			String str = new String(b, "UTF-8");
+    		System.out.println(str);
+		}
+		
 		byte[] lastPacket = list.get(list.size() - 1);
 		String str = new String(lastPacket, "UTF-8");
 		String[] s = str.split(",");
@@ -74,8 +94,9 @@ public class UDP_Server {
 			offset += BUFFER_SIZE;
 //			System.out.println(offset);
 		}
-		System.arraycopy(lastPacket, 0, data, offset, lastPacketSize);
-		
+		System.arraycopy(list.get(list.size() - 2), 0, data, offset, lastPacketSize);
+		String s1 = new String(data, "UTF-8");
+		System.out.println(s1.toString()); 
 		
 		fos.write(data, 0, size);
 		fos.flush();

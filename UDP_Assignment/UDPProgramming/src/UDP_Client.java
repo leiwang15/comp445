@@ -4,11 +4,11 @@ import java.nio.*;
 import java.util.ArrayList;
 
 public class UDP_Client {
-	private static final int BUFFER_SIZE = 1024 * 50;
+	private static final int BUFFER_SIZE = 20;
 	private static final int PORT = 6789;
 	private static final String HOSTNAME = "localhost";
 	private static final int BASE_SEQUENCE_NUMBER = 42;
-	static String inFile = "D:/1.zip";
+	static String inFile = "D:/1.txt";
 
     public static void main(String args[]) throws Exception{
    		// Create a socket
@@ -79,6 +79,11 @@ public class UDP_Client {
     	}
     	String s = "end of file," + lastPacketLength + ",";
     	fileChunks.add(s.getBytes("UTF-8"));
+    	
+    	for(byte[] data : fileChunks){
+    		String str = new String(data, "UTF-8");
+    		System.out.println(str);
+    	}
     	
     	return fileChunks;
     }
